@@ -1,28 +1,32 @@
+from torchvision.transforms import transforms
+
 from isexist import isexist
 # 导入神经网络
 from model import *
 
 # 设置训练设备为cuda
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# 将数据进行归一化处理
+transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
 
 # 下载MNIST数据集
 training_data = datasets.FashionMNIST(
     root="data",
     train=True,
     download=True,
-    transform=ToTensor(),
+    transform=transform,
 )
 
 test_data = datasets.FashionMNIST(
     root="data",
     train=False,
     download=True,
-    transform=ToTensor(),
+    transform=transform,
 )
 
 # 加载数据集
-train_dataloader = DataLoader(training_data, batch_size=64)
-test_dataloader = DataLoader(test_data, batch_size=64)
+train_dataloader = DataLoader(training_data, batch_size=64, shuffle=True)
+test_dataloader = DataLoader(test_data, batch_size=64, shuffle=False)
 
 # 实例化神经网络
 if isexist(name='model.pth'):
@@ -43,7 +47,7 @@ loss_fn = nn.CrossEntropyLoss()
 loss_fn = loss_fn.to(device)
 
 # 设置优化器（随机梯度下降）
-optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.5)
 
 
 # 开始训练
@@ -94,7 +98,7 @@ def test_loop(dataloader, model, loss_fn):
 
 
 # 正式开始训练
-epochs = 20
+epochs = 100
 for t in range(epochs):
     print(f"第 {t+1} 轮\n-------------------------------")
     train_loop(train_dataloader, model, loss_fn, optimizer)
